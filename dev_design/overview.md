@@ -146,11 +146,11 @@ In particular, the Fabric CA server may connect to an LDAP server to do the foll
 
 3. 链网络的设计
 
-详细参见 [联盟设计](./network-design.md)
+详细参见 [链网络的设计](./network-design.md)
 
 4. 通道的设计
 
-详细参见 [联盟设计](./channel-design.md)
+详细参见 [通道的设计](./channel-design.md)
 
 #### 4.3 注意事项
 1. 注意 fabirc-operator 操作的资源同区块链网络 API 上操作的资源界定，明确好各自的职责
