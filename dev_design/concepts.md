@@ -18,7 +18,7 @@
     - 拥有独立的账本、节点、智能合约管理
 - `Proposal-Vote`: 联盟内部的决策机制，用于联盟的组建/解散、成员新增、创建网路、创建channel、智能合约的安装部署等联盟或集体行为
     
-![联盟-网络-通道](./images/concepts_clarification.png.png)
+![联盟-网络-通道](./images/concepts_clarification.png)
 
 ## 区块链概念
 - `CA`: 证书颁发机构

@@ -4,17 +4,13 @@ CRD `Organization`，用于在平台唯一指代联盟的成员组织，Organiza
 
 
 ### 权限设计
-1. 组织内部(in namespace):
-- `Admin`平台用户: 
-    - 具有: `get/list/patch/update`
-    - 不具有: `create/delete`
-- `Client`平台用户
-    -  具有: `get/list`
-    -  不具有: `create/delete/update/patch`
-
-2. 组织外部(out of namespace)
-- 默认情况下为:`invisible`
-- 当加入某个`Federation`后(proposal passed)，为联盟内部成员开放`viewer_cluster_role`权限(`get/list/watch`)
+| 用户类型 | 拥有 | 拥有(条件满足)  |  不拥有  |
+| ------ | ---- | ------------- |  -----  |  
+| Admin(in org)  |  get/list/watch/update/patch  |  - |  create/delete |
+| Client(in org) | get/list/watch | - | craete/delete/update/patch |
+| Admin(out of org)  |  -  |  - |  all |
+| Admin(out of org,in same federation)  |  get/list/watch  |  - |  create/delete/update/patch |
+| Client(out of org) | - | - | all |
 
 
 ### CRD定义
@@ -52,45 +48,56 @@ type OrganizationSpec struct {
 TODO...
 
 
-### 控制器处理
-1. `Organization`创建
+### Webhook
+1. `Mutating Webhook`:  skip
+2. `Validating Webhook`
+通用校验:   
+	- 验证`OrgName` | `DisplayName` | `Admin`是否符合命名规范
+
+Validate 
+- `ValidateCreate`: 
+	a. 通用校验 
+	b. 基于`CARef`验证，CA服务是否正常     
+	c. 校验`Admin`账户是否存在，且是否具有`CA.Admin`权限 
+- `ValidateUpdate`: 
+	a. 通用校验 
+	b. 拒绝更新`CARef`  
+	c. 如果`Admin`更新，则校验新的`Admin`账户是否存在，且是否具有`CA.Admin`权限 
+- `ValidateDelete`:
+	a. 通用校验
+	b. 验证`CARef`对应的CA服务是否已经删除
+
+
+### Contoller控制器  
+#### Create
 - 场景1:  BAAS服务开通
-**NOTE:创建/删除流程需与平台用户开通BAAS服务流程集成到一起(考虑统一用admission controller???)**
+```
 前置:
 1) 平台用户开通BaaS服务，分配`user-namespace`平台用户分配`BAAS-Admin`权限
 2) 平台用户完成企业认证,发起baas服务初始化
 3) 基于企业认证信息，为平台用户创建了组织`CA`服务。CA服务与平台用户对接完成
+```
 
-`admission/organization controller`流程如下:
-1) 基于`CARef`验证，CA服务是否正常
-2）验证`Admin`对应的账户是否在CA中存在
-3) 基于`Admin`的用户名密码`CA`发起证书签名请求，随后生成`MSP`secret
-4) 基于`NumSecondsWarningPeriod` 注册证书更新任务
+1) 基于`Admin`的用户名密码`CA`发起证书签名请求，随后生成`MSP`secret
+2) 基于`NumSecondsWarningPeriod` 注册证书更新任务
 
 产物：
 1) `MSP`secret，存储组织的身份证书信息
 
 
-2. `Organization`删除
-场景：
+
+#### `Organization`删除
 - 场景1： 平台用户决定关闭BaaS服务或者用户的BaaS服务过期,从而需要进行了`Oranization删除操作`
-
-`admission/organization controller`流程如下:
+处理流程:
 1) 基于`CARef`验证，CA是否已经删除
-4) 基于`NumSecondsWarningPeriod` 注册证书更新任务
 
 
-
-3. `Organization`更新
+#### `Organization`更新
 场景：
 - 场景1: 更新`Admin`用户
-
-`admission/organization controller`流程如下:
-1) 基于`CARef`验证，CA服务是否正常
-2）验证`Admin`对应的账户是否在CA中存在
-3) 确认新的`Admin`账户是否存在，不存在则向`CA`注册
-4） 在CA中注销原有`Admin`账户
-5) 基于新的`Admin`用户，更新`MSP` secret
+流程如下:
+1） 在CA中注销原有`Admin`账户
+2)  基于新的`Admin`用户，更新`MSP` secret
 
 
 
