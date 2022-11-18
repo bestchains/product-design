@@ -1,45 +1,39 @@
-## Proposal-Vote机制设计
+# Proposal-Vote机制设计
 
-### 整体设计
+## 整体设计
 
-### 相关CRDs设计
+涉及到5个CRD:
+
+- Organization：组织
+- User：用户
+- Proposal：提案
+- Vote：投票
+- Federation：联盟
+
+### CRD 设计
+
 #### Proposal CRD
-##### 权限设计
-1. `Admin`用户: xxx
-2. `Client`用户: xxx
-##### 定义
-**NOTE:CRD Spec详细定义**
-```
-type ProposalSpec struct {
-    xxx
-}
-```
-
-
-
-##### Webhook(Optional)
-
-##### 控制器
-**NOTE:核心行为控制**
-细分到不同的类型处理: 
-- `CreateFederation`
-- `ChangeMember`
-- `DissolveFederation`
-
-
-1. proposal创建
-
-2. proposal更新
-
 
 #### Vote CRD
-##### 权限设计
-1. `Admin`用户: xxx
-2. `Client`用户: xxx
-##### 定义
-**NOTE:CRD Spec详细定义**
 
-##### Webhook(Optional)
+## 具体使用场景
 
-##### 控制器
-**NOTE:核心行为控制**
+### 1. 创建联盟
+
+![create-federation](images/proposal-vote-create-federation-workflow.drawio.png)
+
+### 2. 添加联盟成员
+
+![add-org](images/proposal-vote-add-member-workflow.drawio.png)
+
+### 3. 驱逐 / 去除 某个联盟成员
+
+![delete-org](images/proposal-vote-delete-member-workflow.drawio.png)
+
+### 4. 解散联盟
+
+![dissolve-federation](images/proposal-vote-dissolve-federation-workflow.drawio.png)
+
+### 5. 部署 CodeChain
+
+TODO
