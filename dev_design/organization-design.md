@@ -1,9 +1,10 @@
-## Organization 设计
-CRD `Organization`，用于在平台唯一指代联盟的成员组织，Organization为`Namespace`级别的资源
-**其中，成员组织与CA为一一对应关系。`1 Organization = 1 CA `**
+## **Organization 设计**
+`Organization`用于在平台唯一指代联盟的成员组织，为`Namespace`级别的资源。  
+>	<mark>**组织与CA为一一对应关系,即`1 Organization = 1 CA `** </mark>  
+>   <mark>**组织下仅允许同时存在一个Admin,即`1 Organization = 1 Admin `** </mark>
+ 
 
-
-### 权限设计
+### **权限设计** 
 | 用户类型 | 拥有 | 拥有(条件满足)  |  不拥有  |
 | ------ | ---- | ------------- |  -----  |  
 | Admin(in org)  |  get/list/watch/update/patch  |  - |  create/delete |
@@ -13,9 +14,10 @@ CRD `Organization`，用于在平台唯一指代联盟的成员组织，Organiza
 | Client(out of org) | - | - | all |
 
 
-### CRD定义
-1. `Spec`定义
-```
+
+### **CRD定义**
+1. `OrganizationSpec` 
+```go
 type OrganizationSpec struct {
 	// DisplayName for this organization
 	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors=true
@@ -42,62 +44,67 @@ type OrganizationSpec struct {
     - CA用户，具有`CA.Admin`权限
 - `NumSecondsWarningPeriod`: `MSP`证书过期告警周期
 
-
-
-2. `Status`定义
-TODO...
-
-
-### Webhook
-1. `Mutating Webhook`:  skip
-2. `Validating Webhook`
-通用校验:   
-	- 验证`OrgName` | `DisplayName` | `Admin`是否符合命名规范
-
-Validate 
-- `ValidateCreate`: 
-	a. 通用校验 
-	b. 基于`CARef`验证，CA服务是否正常     
-	c. 校验`Admin`账户是否存在，且是否具有`CA.Admin`权限 
-- `ValidateUpdate`: 
-	a. 通用校验 
-	b. 拒绝更新`CARef`  
-	c. 如果`Admin`更新，则校验新的`Admin`账户是否存在，且是否具有`CA.Admin`权限 
-- `ValidateDelete`:
-	a. 通用校验
-	b. 验证`CARef`对应的CA服务是否已经删除
-
-
-### Contoller控制器  
-#### Create
-- 场景1:  BAAS服务开通
-```
-前置:
-1) 平台用户开通BaaS服务，分配`user-namespace`平台用户分配`BAAS-Admin`权限
-2) 平台用户完成企业认证,发起baas服务初始化
-3) 基于企业认证信息，为平台用户创建了组织`CA`服务。CA服务与平台用户对接完成
+2. `OrganizationStatus`  
+```go
+type OrganizationStatus struct {
+	// TODO: ...
+}
 ```
 
-1) 基于`Admin`的用户名密码`CA`发起证书签名请求，随后生成`MSP`secret
-2) 基于`NumSecondsWarningPeriod` 注册证书更新任务
 
-产物：
-1) `MSP`secret，存储组织的身份证书信息
+### **Webhook设计**
+#### `Mutating Webhook`  
+> Default 
+#### `Validating Webhook`  
+1. Common Validate: 
+	- 验证`OrgName` | `DisplayName` | `Admin`是否符合命名规范. 
+
+2. Logic Validate  
+- `ValidateCreate`   
+	a. 通用校验    
+	b. 基于`CARef`验证，CA服务是否正常      
+	c. 校验`Admin`账户是否存在，且是否具有`CA.Admin`权限   
+- `ValidateUpdate`   
+	a. 通用校验   
+	b. 拒绝更新`CARef`   
+	c. 如果`Admin`更新，则校验新的`Admin`账户是否存在，且是否具有`CA.Admin`权限   
+- `ValidateDelete`   
+	a. 通用校验   
+	b. 验证`CARef`对应的CA服务是否已经删除   
 
 
+### **Contoller控制器设计** 
+#### **Organization创建**
+> **场景:  BAAS服务开通**
+> ```
+> 前置:
+> 1) 平台用户开通BaaS服务，分配`user-namespace`平台用户分配`BAAS-Admin`权限
+> 2) 平台用户完成企业认证,发起baas服务初始化
+> 3) 基于企业认证信息，为平台用户创建了组织`CA`服务。CA服务与平台用户对接完成
+> ```
+处理流程: 
+1. 基于`Admin`的用户名密码`CA`发起证书签名请求，随后生成`MSP`secret 
+2. 基于`NumSecondsWarningPeriod` 注册证书更新任务  
 
-#### `Organization`删除
-- 场景1： 平台用户决定关闭BaaS服务或者用户的BaaS服务过期,从而需要进行了`Oranization删除操作`
-处理流程:
-1) 基于`CARef`验证，CA是否已经删除
+> 产物: `MSP`secret，存储组织的身份证书信息
 
 
-#### `Organization`更新
+#### **Organization更新**  
+
 场景：
 - 场景1: 更新`Admin`用户
 流程如下:
 1） 在CA中注销原有`Admin`账户
 2)  基于新的`Admin`用户，更新`MSP` secret
+
+
+#### **Organization删除**
+> 场景： 平台用户决定关闭BaaS服务或者用户的BaaS服务过期,从而需要进行了`Oranization删除操作`
+
+处理流程:
+1) 基于`CARef`验证，CA是否已经删除  
+<mark> **TODO:** 考虑跟其他CRD资源的关联，如proposal|vote|network|channel......</mark>
+
 
 
 
