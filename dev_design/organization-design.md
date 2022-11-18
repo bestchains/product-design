@@ -48,8 +48,13 @@ type OrganizationSpec struct {
 ```go
 type OrganizationStatus struct {
 	// TODO: ...
+	Condition metav1.Condition `json:"condition,omitempty"`  
 }
 ```
+
+
+![CRD](./images/organization-crd.png)
+
 
 
 ### **Webhook设计**
@@ -109,7 +114,8 @@ type OrganizationStatus struct {
 
 
 
-
+### 遗留问题
+1. `Organization`的 `visibility`应该如何设置? 什么情况下可允许平台内其他用户检索???
 
 
 

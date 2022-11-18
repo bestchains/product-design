@@ -36,7 +36,7 @@ type FederationSpec struct {
     - `Majority`
 -  `Members`: 联盟内部成员列表,对应`CRD Organization`
 
-![Federation-Proposal-Vote](./images/federation-proposal-vote-page.png)
+![Federation-Proposal-Vote](./images/federation-crd.png)
 
 2. `FedeartionStatus` 
 ```go
