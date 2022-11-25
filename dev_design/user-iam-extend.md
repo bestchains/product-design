@@ -1,6 +1,6 @@
 # Extend IAM with Fabric
 
-`User`用于作为平台用户与CA用户的纽带。平台用户新增/删除的过程，同步到`CR User`的`Create`/`Delete`。
+扩展IAM `User CRD`，用于支持区块链服务需求
 
 ## CRD UserSpec
 
