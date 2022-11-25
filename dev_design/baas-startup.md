@@ -47,23 +47,12 @@
 
 1. 为企业创建新的命名空间`{ORGID}-baas`
 
-2. 为当前用户开通该组织的`Admin`权限，负责管理该组织的各种资源
+2. 为当前用户开通IAM`Admin`权限
 
-3. 为当前用户部署`CA`（<mark>CA资源仅对用户开放`get/list/watch`权限</mark>。其中，部署过程中:
+3. 为用户生成随机密码 `Secret`
 
-- CA名称为: {ORG_ID}-ca
+4. 以`UID:Secret`作为CA admin identity，部署`CR CA`：
 
-- 对齐CA与组织平台用户，即:
+5. 创建`CR Organization`
 
-  - `平台.Admin` = `CA.Admin`
-
-  - `平台.Client` = `CA.Client`
-
-- 配置定制化参数，如`IBPCASpec.ConfigOverride.CA`和`IBPCASpec.ConfigOverride.TLSCA`
-
-4. 创建`Organization`
-d
-- 设置`Admin`为当前平台用户
-- 设置`CARef`为当前组织CA
-
-5. 创建完成后，跳转到`BAAS`面板
+6. 创建完成后，跳转到`BAAS`面板

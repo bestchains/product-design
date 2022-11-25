@@ -85,7 +85,7 @@ Federation 分为四个状态:
 **状态转移图如下:**
 ![federation-state-transition](./images/federation-state-transition.png)
 
-### **Webhook 设计**
+### **Webhook 设计**(TODO)
 
 1. `Mutating Webhook`:
    - 定义 `Initiator` 为当前 `Admin` 所属的组织
@@ -99,9 +99,29 @@ Federation 分为四个状态:
 
 ### **Contoller 控制器设计**
 
+#### Controller Watch
+
+1. Federation
+
+- 监听到`Create` Event后，创建cluster role
+- 监听到`Update` Event后， 不做特殊操作（Update由controller根据proposal做出）
+- 监听到`Delete` Event后，不做操作
+
+2. Proposal
+
+目的：监听`Federation`相关的Proposal状态，从而更新`Federation`的`Spec`和`Status`
+
+- `CreateFederation`: 更新状态为`Activated`，同时更新`Organization`对应的`Status`
+
+- `ChangeFederationMember`
+  - 为新用户开通cluster role权限。或者删除cluster role权限
+  - 更新`Spec.Members`
+
+- `DissolveFederation`： 更新状态为`Dissolved`
+
+
 #### **Federation 创建**
 
-TODO: 无需额外操作
 
 #### **Federation 更新**
 
@@ -111,22 +131,21 @@ TODO: 无需额外操作
 - 更新成员:`ChangeFederationMember`
 - 解散联盟: `DissolveFederation`
 
-> `CreateFederation` 的处理流程为:
->
-> 1. controller 监听 `proposal`(type `CreateFederation` related)
-> 2. 针对 `proposal` 状态:
->    - 如果 proposal 为 `succ`,则更新 `Fedeation` 状态为 `Activated`
->    - 如果 proposal 为 `fail`,则更新 `Federation` 状态为 `Failed`
+> `CreateFederation`的处理流程为:
+>  1. controller监听`proposal`(type `CreateFederation` related)
+>  2. 针对`proposal`状态:
+    - 如果proposal为`succ`则**校验proposal**并更新`Fedeation`状态为`Activated`
+    - 如果proposal为`fail`,**校验proposal**并更新`Federation`状态为`Failed`
 
-> `ChangeFederationMember` 的处理流程:
->
-> 1. controller 监听 `proposal succ`(type `ChangeFederationMember` related)
-> 2. 在 `members` 列表中，删除/新增一个成员组织
+> `ChangeFederationMember`的处理流程:
+>  1. controller监听`proposal succ`(type `ChangeFederationMember` related)
+>  2. controller校验`proposal`
+>  3. 在`members`列表中，删除/新增一个成员组织
 
-> `DissolveFederation` 的处理流程为：
->
-> 1. controller 监听 `proposal succ`(type `DissolveFederation` related)
-> 2. 更新 `Fedeation` 状态为 `Dissolved`
+> `DissolveFederation`的处理流程为：
+> 1. controller监听`proposal succ`(type `DissolveFederation` related)
+> 2. 校验`proposal`
+> 3. 更新`Fedeation`状态为`Dissolved`
 
 #### **Federation 删除**
 
