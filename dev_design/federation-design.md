@@ -26,22 +26,30 @@
 
 ```go
 type FederationSpec struct {
-    Initiator string `json:"initiator,omitempty"`
     Description string `json:"description,omitempty"`
     Policy string `json:"policy,omitemtpy"` 
     Members []string `json:"members,omitempty"`  
 }
+
+type Member struct {
+	Name      string `json:"name,omitempty"`
+	Namespace string `json:"namespace,omitempty"`
+	Initiator bool   `json:"initiator,omitempty"`
+}
+ 
 ```
 
 解释：
 
-- `Initiator`: 发起者组织名称，对应 `CRD Organization`
 - `Description`: 联盟描述信息
 - `Policy`: 联盟内部决策的策略(详细可参考 proposal-vote 设计)，支持:
   - `OneVote`  一票否决。
   - `Majority` 多数人同意即同意。
   - `All` 所有人都需要同意。
 - `Members`: 联盟内部成员列表,对应 `CRD Organization`
+  - `Name`: 成员名称(组织名称)
+  - `Namespace`:  成员所在命名空间
+  - `Initiator`： 是否联盟发起人 
 
 ![Federation-Proposal-Vote](./images/federation-crd.png)
 
