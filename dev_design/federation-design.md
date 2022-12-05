@@ -71,14 +71,9 @@ const (
 )
 
 type FedeartionStatus stuct {
-    Type ConditionType  `json:"type,omitempty"`
-    Status ConditionStatus `json:"status,omitempty"`
+    CRStatus `json:",inline"`
 
-    Reason string  `json:"reason,omitemtpy"`
-    Message string `json:"message,omitempty"`
-
-    ObservedGeneration int64 `json:"observedGeneration,omitemtpy"`
-    LastTransitionTime Time `json:"lastTransitionTime,omitempty"`
+    Networks `json:"networks"`
 }
 
 ```
@@ -104,18 +99,19 @@ Federation 分为四个状态:
      - 验证新成员组织是否存在 `Organization`
    - `ValidateDelete`:
      - 验证当前联盟状态是否为 `Failed/Dissolved`
+     - 验证当前联盟是否仍有`Network`
 
 ### **Contoller 控制器设计**
 
 #### Controller Watch
 
-1. Federation
+1. Watch Federation
 
 - 监听到`Create` Event后，创建cluster role
 - 监听到`Update` Event后， 不做特殊操作（Update由controller根据proposal做出）
 - 监听到`Delete` Event后，不做操作
 
-2. Proposal
+2. Watch Proposal
 
 目的：监听`Federation`相关的Proposal状态，从而更新`Federation`的`Spec`和`Status`
 
@@ -127,8 +123,9 @@ Federation 分为四个状态:
 
 - `DissolveFederation`： 更新状态为`Dissolved`
 
+3. Watch Network
 
-#### **Federation 创建**
+目的: 监控`Network`，更新`Federations.Status.Networks`
 
 
 #### **Federation 更新**

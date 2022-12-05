@@ -2,7 +2,6 @@
 
 `Organization`用于在平台唯一指代联盟的成员组织，为`Namespace`级别的资源。  
 > <mark>**组织与CA为一一对应关系,即`1 Organization = 1 CA`** </mark>  
-> <mark>**组织下仅允许同时存在一个Admin,即`1 Organization = 1 Admin`** </mark>
 
 ### **权限设计**
 
