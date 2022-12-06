@@ -127,6 +127,9 @@ Federation 分为四个状态:
 
 目的: 监控`Network`，更新`Federations.Status.Networks`
 
+- `Network`新增时，添加到对应`Federation.Status`
+- `Network`删除时，从对应的`Federation.Status`中删除
+
 
 #### **Federation 更新**
 

@@ -26,20 +26,27 @@
 
 ```go
 type NetworkSpec struct {
-	// Federation
+	// Federation  
 	Federation NamespacedName `json:"federation,omitempty"`
+
+	// Members which this network contains
+	// (DO NOT EDIT)Cloned automatically from Fderation.Spec.Members
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors=true
+
+	Members []Member `json:"members,omitempty"`
 
 	// Consensus cluster(IBPOrderer)
 	Consensus NamespacedName `json:"consensus,omitempty"`
-    
 }
 ```
 
 ![Network](./images/network-crd.png)
 
-解释
+解释:
 
 - `Federation`: 网络所属联盟
+
+- `Members`: 网络成员列表(为Federation.Members子集)
 
 - `Consensus`: 网络排序组件，必须与`Network`为相同`Namespace`，即由`Network`创建者负责提供其拥有的`Consensus(IBPOrderer)`
 
@@ -55,20 +62,23 @@ const (
 
 Network分为两个状态:
 
-- **Activated**: 代表当前联盟的排序服务已经创建完成
-- **Dissolved**: 代表当前联盟的`DissolveFederation proposal-vote`成功，联盟已经解散
+- **Created**: 代表当前网络已创建成功
+- **Dissolved**: 代表当前网络的`DissolveFederation proposal-vote`成功，玩过已经解散
 
 ## **Webhook设计**
 
 1. `Mutating Webhook`
 
+- 定义 `Initiator` 为当前 `Admin` 所属的组织
 - 设置`Consensus.Namespace`为当前`Netowrk.Namespace`
 
 2. `Validating Webhook`
 
 - `ValidateCreate`
+  - 验证当前用户所在组织是否为`Federation`成员
   - 验证Federation的状态
   - 验证Consensus(IBPOrderer)的状态
+  - 检验并向`Members`中填充当前组织
 
 - `ValidateUpdate`
   - 不允许更新`Consensus`
@@ -95,6 +105,19 @@ Network分为两个状态:
 
 ### Reconcile
 
-1. 查看`Federation`状态，并更新`Network.Status`
+1. Prereconcile
 
-2. 查看`Consensus(IBPOrderer)`状态，并更新`Network.Status`
+- 查看`Federation`状态，并更新`Network.Status`
+- 查看`Consensus(IBPOrderer)`状态，并更新`Network.Status`
+
+2. Initialize
+TODO...
+
+3. ReconcileManagers
+
+- `ClusterRole`: 创建当前`Network`的`get`
+- `ClusterRolebinding`: 授予相关member的`Admin`用户
+
+## 遗留问题
+
+1. `Network.Spec.Members` 是否必须包含创建`Network`的组织
