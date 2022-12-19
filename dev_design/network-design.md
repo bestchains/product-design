@@ -4,7 +4,9 @@
 
 - 联盟中任何成员都可以创建网络并提供排序服务(可新建或沿用之前的排序服务)
 - 网络成员依赖`Federation`的定义(暂时不支持自定义)
-- 网络的其他参与者可选择性的将基础节点加入到该网络中
+- 网络的其他参与者可选择性的将基础节点加入到该网络
+- Network包含一个默认的`system-channel` (all members in this channel)
+- Network不涉及成员更新，`Members`里定义的是system-channel包含的成员组织列表
 
 ## **权限设计**
 
@@ -36,7 +38,7 @@ type NetworkSpec struct {
 	Members []Member `json:"members,omitempty"`
 
 	// Consensus cluster(IBPOrderer)
-	Consensus NamespacedName `json:"consensus,omitempty"`
+	Consensus IBPOrdererSpec `json:"consensus,omitempty"`
 }
 ```
 
@@ -46,7 +48,7 @@ type NetworkSpec struct {
 
 - `Federation`: 网络所属联盟
 
-- `Members`: 网络成员列表(为Federation.Members子集)
+- `Members`: 网络成员列表(为Federation.Members子集),为初始system channel的成员组织列表
 
 - `Consensus`: 网络排序组件，必须与`Network`为相同`Namespace`，即由`Network`创建者负责提供其拥有的`Consensus(IBPOrderer)`
 
@@ -117,7 +119,5 @@ TODO...
 
 - `ClusterRole`: 创建当前`Network`的`get`
 - `ClusterRolebinding`: 授予相关member的`Admin`用户
-
-## 遗留问题
-
-1. `Network.Spec.Members` 是否必须包含创建`Network`的组织
+- `IBPOrderer`: 主动创建一个`orderer cluster`
+- `Channel`: 主动创建一个`system channel`  
