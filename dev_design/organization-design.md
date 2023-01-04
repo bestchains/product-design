@@ -1,17 +1,15 @@
 ## **Organization 设计**
 
-`Organization`用于在平台唯一指代联盟的成员组织，为`Namespace`级别的资源。  
+`Organization`用于作为成员组织参与联盟、网络，为`Cluster scope`资源。  
 > <mark>**组织与CA为一一对应关系,即`1 Organization = 1 CA`** </mark>  
 
 ### **权限设计**
 
 | 用户类型 | 拥有 | 拥有(条件满足)  |  不拥有  |
 | ------ | ---- | ------------- |  -----  |  
-| Admin(in org)  |  get/list/watch/update/patch  |  - |  create/delete |
-| Client(in org) | get/list/watch | - | craete/delete/update/patch |
-| Admin(out of org)  |  -  |  - |  all |
-| Admin(out of org,in same federation)  |  get/list/watch  |  - |  create/delete/update/patch |
-| Client(out of org) | - | - | all |
+| All User |  create/get/list  |  - |  all |
+| Admin(in org)  |  create/get/list/update/patch/delete  |  - |  - |
+| Client(in org) | create/get/list/watch | - | delete/update/patch |
 
 ### **CRD定义**
 
@@ -19,50 +17,99 @@
 
 ```go
 type OrganizationSpec struct {
-  // License should be accepted by the user to be able to setup console
-  // +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors=true
-  License License `json:"license"`
-  // DisplayName for this organization
-  // +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors=true
-  DisplayName string `json:"displayName,omitempty"`
+	// License should be accepted by the user to be able to setup console
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors=true
+	License License `json:"license"`
 
-  // Admin is the platform user(CA:Admin) to represents this organization in this federation(Only one admin in each organization)
-  // This account will be granted a ClusterRole(`get/list/update/patch`) to this `Federation Resource`
-  // +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors=true
-  Admin string `json:"admin,omitempty"`
+	// DisplayName for this organization
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors=true
+	DisplayName string `json:"displayName,omitempty"`
 
-  AdminSecret string `json:"adminSecret,omitempty"`
+	// Description
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors=true
+	Description string `json:"description,omitempty"`
 
-  // CARef which manage credentials for this organization
-  CAReference `json:"caReference,omitempty"`
+	// Admin is the User/ServiceAccount with `Admin` role both in kubernetes and in CA
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors=true
+	Admin string `json:"admin"`
+
+	// Clients are the Users/ServiceAccounts with `Client` role both in kubernetes and in CA
+	Clients []string `json:"clients,omitempty"`
+
+	// CASpec is the configurations of organization's related Certificate Authority
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors=true
+	CASpec IBPCASpec `json:"caSpec,omitempty"`
 }
 
 
-type CAReference struct {
-  Name string
-  CA string
-}
 ```
 
 `OrganizationSpec`包含以下字段:
 
-- `DisplayName`: 组织的展示名称，可读性强
-- ` CAReference `: 组织所属的CA机构
-  - `Name`: CA机构名称
-  - `CA`: 具体使用哪个CA服务（ca/tlsca）
-- `Admin`: 组织的管理员账户，此账户需同时为：
-  - 平台用户，具有该组织`Admin`权限
-  - CA用户，具有`CA.Admin`权限
-- `AdminSecret`: 管理员账户对应的CA账户密码
+- `DisplayName`: 组织的展示名称
+- `Descriptionn`: 组织描述信息
+- `Admin`: 组织的Admin用户
+- `Clients`: 组织的client用户列表
+- `CASpec` : 组织拥有的CA服务配置
 
 2. `OrganizationStatus`
 
 ```go
 type OrganizationStatus struct {
-  // TODO: ...
-  Condition metav1.Condition `json:"condition,omitempty"`  
+	// CRStatus is the custome resource status
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors=true
+	CRStatus `json:",inline"`
+
+	// Federations which this organization has been added
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors=true
+	Federations []NamespacedName `json:"federations,omitempty"` 
+}
+
+type CRStatus struct {
+	// Type is true or false based on if status is valid
+	// +operator-sdk:gen-csv:customresourcedefinitions.statusDescriptors=true
+	Type IBPCRStatusType `json:"type,omitempty"`
+
+	// Status is defined based on the current status of the component
+	// +operator-sdk:gen-csv:customresourcedefinitions.statusDescriptors=true
+	Status IBPCRStatus `json:"status,omitempty"`
+
+	// Reason provides a reason for an error
+	// +operator-sdk:gen-csv:customresourcedefinitions.statusDescriptors=true
+	Reason string `json:"reason,omitempty"`
+
+	// Message provides a message for the status to be shown to customer
+	// +operator-sdk:gen-csv:customresourcedefinitions.statusDescriptors=true
+	Message string `json:"message,omitempty"`
+
+	// LastHeartbeatTime is when the controller reconciled this component
+	// +operator-sdk:gen-csv:customresourcedefinitions.statusDescriptors=true
+	LastHeartbeatTime string `json:"lastHeartbeatTime,omitempty"`
+
+	// Version is the product (IBP) version of the component
+	// +operator-sdk:gen-csv:customresourcedefinitions.statusDescriptors=true
+	Version string `json:"version,omitempty"`
+
+	// ErrorCode is the code of classification of errors
+	// +operator-sdk:gen-csv:customresourcedefinitions.statusDescriptors=true
+	ErrorCode int `json:"errorcode,omitempty"`
+
+	// Versions is the operand version of the component
+	// +operator-sdk:gen-csv:customresourcedefinitions.statusDescriptors=true
+	Versions CRStatusVersion `json:"versions,omitempty"`
+}
+
+type NamespacedName struct {
+	Name      string `json:"name,omitempty"`
+	Namespace string `json:"namespace,omitempty"`
 }
 ```
+
+其中:
+
+- `CRStatus`: `Organization`的详细状态信息
+- `Federations`: 记录当前组织所在的联盟列表
+
 
 ![CRD](./images/organization-crd.png)
 
@@ -96,33 +143,52 @@ Default:
 
 #### **Organization创建**
 
-> **场景:  BAAS服务开通**
-
-> ```text
-> 前置:
-> 1) 平台用户开通BaaS服务，分配`user-namespace`平台用户分配`BAAS-Admin`权限
-> 2) 平台用户完成企业认证,发起baas服务初始化
-> 3) 基于企业认证信息，为平台用户创建了组织`CA`服务。CA服务与平台用户对接完成
-> 4) 平台用户对应的CA.Admin账户密码通过`k8s secret`保存
-> ```
-
 处理流程:
 
-1. 基于`Admin`的用户名密码`CA`发起证书签名请求，随后生成两个secret:
+1. 创建namespace {org_name}
+2. 基于`CASpec`创建组织CA
+3. 配置`RBAC`:
 
-- `organization msp secret` : 包含组织msp的证书
-- `Admin crypto secret`: 包含`Admin`用户的私钥和证书
+  - 创建`{orgname}-blockchain:admin-clusterrole` 和 `{orgname}-blockchain:client-clusterrole`， 用于定义该组织下admin用户和client用户在cluster scope资源上的权限
+  - 创建`{orgname}-blockchain:admin-clusterrolebinding`, 将上述的`admin-clusterrole`赋予 admin用户
+  - 创建`{orgname}-blockchain:client-clusterrolebinding`，将上述的`client-clusterrole`赋予给组织下所有的`clients`用户
+  - 创建`{orgname-blockchain:admin-role}`和 `{orgname-blockchain:client-role}`
+  - 赋予`admin`用户上述`admin-role`,赋予所有的`clients`上述`client-role`权限 
+
+4. 配置用户的注解\label
+
+  - 为admin用户新增`BlockchainAnnotation`，内含`admin id`
+  - 为admin用户增加label `bestchains.organization.{org_name}:admin`
+  - 为所有clients用户新增`BlockchainAnnotation`,内含`client id`
+  - 为所有clients用户增加label `bestchains.organization.{org_name}:client`
+
 
 #### **Organization更新**  
 
-场景:
+- 场景1: 变换`Admin`用户
 
-- 场景1: 更新`Admin`用户
+1. 更新rbac
+  
+  - 编辑`admin-clusterolebinding`，替换subject为新admin用户
+  - 编辑`admin-rolebinding`，替换subject为新admin
 
-流程如下:
 
-1. `Admin`或`CAReference.Name`更新，则触发`secret`重新生成
+2. 更新用户注解\label
+
+  - 删除原`admin`用户的相关组织注解
+  - 将原`admin`用户的组织注解添加到新`admin`用户上
+  - 将注解内部的`admin id`更新为新用户
 
 #### **Organization删除**
 
-> 场景： 平台用户决定关闭BaaS服务或者用户的BaaS服务过期,从而需要进行了`Oranization删除操作`
+处理流程:
+
+1. 删除所有组织为owner的资源
+2. 删除该组织管理的namespace
+3. 删除组织下所有用户的相关注解和label
+
+### 相关讨论
+
+1. 统一组织下的RBAC https://github.com/bestchains/fabric-operator/issues/21
+2. 支持配置组织`clients`和`admin`转移 https://github.com/bestchains/fabric-operator/issues/20
+
