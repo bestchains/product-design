@@ -116,6 +116,8 @@ type UpgradeChaincodeProposal struct {
 1. `Peer`节点镜像需要使用:  `https://github.com/bestchains/fabric-builder-k8s/blob/main/Dockerfile`
 2. 提前构建好chaincode镜像 `https://github.com/bestchains/fabric-builder-k8s/tree/main/samples/go-contract`
 
+![Image_Build](./images/chaincode_usage.drawio.png)
+
 ### 创建部署一个Chaincode 
 
 创建流程如下:
