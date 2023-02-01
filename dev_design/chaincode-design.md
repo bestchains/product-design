@@ -109,7 +109,7 @@ type UpgradeChaincodeProposal struct {
 }
 ```
 
-## **CRD Reconcile**
+## **核心流程**
 
 ### 预先准备
 
